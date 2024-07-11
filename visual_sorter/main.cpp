@@ -15,16 +15,28 @@
 #define CLEAR_COLOR_B 0x00
 #define CLEAR_COLOR_A SDL_ALPHA_OPAQUE
 
+#define CUSHION	2	//pixels between bars
+#define ARRAY_SIZE 120
+#define VAL_MAX ARRAY_SIZE
+
+
 struct layout {
     int numTiles;
     int rows;
     int cols;
 };
 
+struct bar {
+    int heightRes;
+    int width;
+    int stride;
+};
+
 struct visualSorter {
     SDL_Window *mainWin;
     SDL_Renderer *mainRenderer;
     struct layout layout;
+    struct bar bar;
 };
 
 bool init(struct visualSorter *sorter) {
@@ -91,10 +103,60 @@ bool clearScreen(struct visualSorter sorter) {
 
 //draw the borders around sort windows
 bool drawBorders(struct visualSorter sorter) {
+    //this doesn't actually draw a border yet, jut one rectangle
+    /*
     SDL_Rect border = {SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 10, SCREEN_HEIGHT/3};
     SDL_SetRenderDrawColor(sorter.mainRenderer, DRAW_COLOR_R, DRAW_COLOR_G, DRAW_COLOR_B, DRAW_COLOR_A);
     if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
 	SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	return false;
+    }
+    */
+
+    return true;
+}
+
+void setColorClear(struct visualSorter sorter) {
+    SDL_SetRenderDrawColor(sorter.mainRenderer, CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
+}
+
+void setColorDraw(struct visualSorter sorter) {
+    SDL_SetRenderDrawColor(sorter.mainRenderer, DRAW_COLOR_R, DRAW_COLOR_G, DRAW_COLOR_B, DRAW_COLOR_A);
+}
+
+bool drawState(struct visualSorter sorter, int *vals, int size) {
+    int bottom = SCREEN_HEIGHT - CUSHION;
+    int i = 0;
+    struct bar bar = sorter.bar;
+
+    setColorDraw(sorter);
+
+    //for each value in vals, draw rectangle
+    for(i = 0; i < size; ++i) {
+	int barHeight = vals[i] * bar.heightRes;
+	SDL_Rect barRect = {CUSHION + (i * bar.stride), bottom - barHeight, bar.width, barHeight};
+	if(0 > SDL_RenderFillRect(sorter.mainRenderer, &barRect)) {
+	    SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	    return false;
+	}
+
+    }
+    return true;
+}
+
+bool drawAllStates(struct visualSorter sorter) {
+   int vals[ARRAY_SIZE] = {0};
+   int i = 0;
+
+   //todo: don't fill array with fake values
+   for (i = 0; i < ARRAY_SIZE; ++i) {
+       if (i <= VAL_MAX) { 
+	    vals[i] = i % (VAL_MAX + 1) + 1;
+	    //SDL_Log("%d: %d", i, vals[i]); 
+       }
+   }
+
+    if (!drawState(sorter, vals, ARRAY_SIZE)) {
 	return false;
     }
 
@@ -107,6 +169,10 @@ bool drawScreen(struct visualSorter sorter) {
     }
 
     if(!drawBorders(sorter)) {
+	return false;
+    }
+
+    if(!drawAllStates(sorter)) {
 	return false;
     }
 
@@ -134,10 +200,19 @@ bool loopHandler(struct visualSorter sorter) {
 
 }
 
-void getLayout(struct layout *layout) {
+void setLayout(struct layout *layout) {
     layout->numTiles = 2;
     layout->rows = 1;
     layout->cols = 2;
+}
+
+void setBar(struct bar *bar) {
+    bar->width = ((SCREEN_WIDTH - CUSHION)/ARRAY_SIZE) - CUSHION ;
+    SDL_Log("bar width = %d", bar->width);
+    bar->heightRes = (SCREEN_HEIGHT - (2 * CUSHION)) / (VAL_MAX);
+    SDL_Log("bar heightRes = %d", bar->heightRes);
+    bar->stride = bar->width + CUSHION;
+    SDL_Log("bar stride = %d", bar->stride);
 }
 
 int main(int argc, char* argv[]) {
@@ -150,7 +225,8 @@ int main(int argc, char* argv[]) {
 	quit = true;
     }
 
-    getLayout(&sorter.layout);
+    setLayout(&sorter.layout);
+    setBar(&sorter.bar);
 
     while(!quit) {
 	quit = loopHandler(sorter);
