@@ -31,6 +31,7 @@ struct bar {
     int heightRes;
     int width;
     int stride;
+    int frontPorch;
 };
 
 struct visualSorter {
@@ -135,7 +136,7 @@ bool drawState(struct visualSorter sorter, int *vals, int size) {
     //for each value in vals, draw rectangle
     for(i = 0; i < size; ++i) {
 	int barHeight = vals[i] * bar.heightRes;
-	SDL_Rect barRect = {CUSHION + (i * bar.stride), bottom - barHeight, bar.width, barHeight};
+	SDL_Rect barRect = {bar.frontPorch + (i * bar.stride), bottom - barHeight, bar.width, barHeight};
 	if(0 > SDL_RenderFillRect(sorter.mainRenderer, &barRect)) {
 	    SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
 	    return false;
@@ -150,6 +151,7 @@ bool drawAllStates(struct visualSorter sorter) {
    int i = 0;
 
    //todo: don't fill array with fake values
+   //actually, pass in starter values once at beginning
    for (i = 0; i < ARRAY_SIZE; ++i) {
        if (i <= VAL_MAX) { 
 	    vals[i] = i % (VAL_MAX + 1) + 1;
@@ -214,6 +216,8 @@ void setBar(struct bar *bar) {
     SDL_Log("bar heightRes = %d", bar->heightRes);
     bar->stride = bar->width + CUSHION;
     SDL_Log("bar stride = %d", bar->stride);
+    bar->frontPorch = (SCREEN_WIDTH - (ARRAY_SIZE * bar->stride))/2;
+    SDL_Log("bar front porch = %d", bar->frontPorch);
 }
 
 int main(int argc, char* argv[]) {
