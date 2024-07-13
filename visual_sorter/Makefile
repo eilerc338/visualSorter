@@ -19,5 +19,6 @@ all : $(OBJS)
 
 #C
 #gcc -Wall -g `sdl2-config --cflags` -c main.c
-#gcc main.o -Wall -g `sdl2-config --libs` -o visual_sorter_c
+#gcc -Wall -g `sdl2-config --cflags` -c insertionSort_alg.c
+#gcc main.o insertionSort_alg.o -Wall -g `sdl2-config --libs` -o visual_sorter_c
 #./visual_sorter_c

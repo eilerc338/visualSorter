@@ -21,6 +21,29 @@
 #define VAL_MAX ARRAY_SIZE
 
 
+extern bool insertion_init(int *data, size_t dataSize, void **outInsertionContext, size_t *sizeContext);
+
+struct algsList {
+    char friendlyName[FILENAME_MAX];
+    bool (*initAlgorithm)(int *data, size_t dataSize, void **outAlgContext, size_t *sizeContext);
+};
+
+struct algsList list[] = {
+    {"Insertion Sort", &insertion_init},
+    {"", NULL}
+};
+
+struct algData {
+    int data[ARRAY_SIZE];
+    int size;
+};
+
+enum initialState {
+    SORTED,
+    REVERSE_SORTED,
+    RANDOM,
+};
+
 struct layout {
     int numTiles;
     int rows;
@@ -220,6 +243,10 @@ void setBar(struct bar *bar) {
     SDL_Log("bar front porch = %d", bar->frontPorch);
 }
 
+int alg_init() {
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
     struct visualSorter sorter = {NULL, NULL, {0,0,0}};
     bool quit = false;
@@ -230,8 +257,13 @@ int main(int argc, char* argv[]) {
 	quit = true;
     }
 
+    SDL_Log("initializing %s", list[0].friendlyName);
+    list[0].initAlgorithm(NULL, 0, NULL, NULL);
+
     setLayout(&sorter.layout);
     setBar(&sorter.bar);
+
+    alg_init();
 
     while(!quit) {
 	quit = loopHandler(sorter);
