@@ -1,5 +1,6 @@
 #include "SDL.h"
 #include <stdbool.h>
+#include "sort_algorithms.h"
 
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
@@ -21,22 +22,27 @@
 #define VAL_MAX ARRAY_SIZE
 
 
-extern bool insertion_init(int *data, size_t dataSize, void **outInsertionContext, size_t *sizeContext);
-
-struct algsList {
+struct algDesc {
     char friendlyName[FILENAME_MAX];
-    bool (*initAlgorithm)(int *data, size_t dataSize, void **outAlgContext, size_t *sizeContext);
+    bool (*add)(struct entryPoints *ep);
 };
 
-struct algsList list[] = {
-    {"Insertion Sort", &insertion_init},
+struct algDesc list[] = {
+    {"Insertion Sort", &insertionAdd},
     {"", NULL}
 };
 
+struct algContext {
+    struct entryPoints ep;
+    void *privateData;
+};
+
+/*
 struct algData {
     int data[ARRAY_SIZE];
     int size;
 };
+*/
 
 enum initialState {
     SORTED,
@@ -62,11 +68,15 @@ struct visualSorter {
     SDL_Renderer *mainRenderer;
     struct layout layout;
     struct bar bar;
+    int numAlgs;
+
+    //pointer to a malloced array
+    struct algContext *algorithms;
 };
 
 bool init(struct visualSorter *sorter) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-	//SDL_Log("Error SDL_Init: %s", SDL_GetError());
+	SDL_Log("Error SDL_Init: %s", SDL_GetError());
 	return false;
     }
 
@@ -169,27 +179,22 @@ bool drawState(struct visualSorter sorter, int *vals, int size) {
     return true;
 }
 
+/*
 bool drawAllStates(struct visualSorter sorter) {
-   int vals[ARRAY_SIZE] = {0};
-   int i = 0;
+   //todo: 
+   //do
 
-   //todo: don't fill array with fake values
    //actually, pass in starter values once at beginning
-   for (i = 0; i < ARRAY_SIZE; ++i) {
-       if (i <= VAL_MAX) { 
-	    vals[i] = i % (VAL_MAX + 1) + 1;
-	    //SDL_Log("%d: %d", i, vals[i]); 
-       }
-   }
-
     if (!drawState(sorter, vals, ARRAY_SIZE)) {
 	return false;
     }
 
     return true;
 }
+*/
 
 bool drawScreen(struct visualSorter sorter) {
+    int i = 0;
     if(!clearScreen(sorter)) {
 	return false;
     }
@@ -198,9 +203,17 @@ bool drawScreen(struct visualSorter sorter) {
 	return false;
     }
 
+    for (i = 0; i < sorter.numAlgs; ++i) {
+	struct algContext alg = sorter.algorithms[i];
+	drawState(sorter, alg.ep.getData(alg.privateData), alg.ep.getDataSize(alg.privateData));
+    }
+
+    //todo draw the states in a loop
+    /*
     if(!drawAllStates(sorter)) {
 	return false;
     }
+    */
 
     return true;
 }
@@ -243,13 +256,73 @@ void setBar(struct bar *bar) {
     SDL_Log("bar front porch = %d", bar->frontPorch);
 }
 
-int alg_init() {
+int alg_init(struct visualSorter *sorter, int *data, int dataSize) {
+    int i = 0;
+    struct algDesc *desc = list;
+
+    sorter->numAlgs = 0;
+
+    while(desc->add != NULL) {
+	sorter->numAlgs++;
+	desc++;
+    }
+
+    SDL_Log("number of Algorithms found: %d", sorter->numAlgs);
+
+    sorter->algorithms = (struct algContext *) malloc(sizeof(struct algContext) * sorter->numAlgs);
+    if (sorter->algorithms  == NULL) {
+	SDL_Log("alg_init: malloc failed");
+	return -1;
+    }
+
+    for (i = 0; i < sorter->numAlgs; ++i) {
+	list[i].add(&sorter->algorithms[i].ep);
+	sorter->algorithms[i].privateData = sorter->algorithms[i].ep.init(data, dataSize);
+    }
+
     return 0;
+}
+
+void alg_deinit(struct algContext *algorithms, int count) {
+    int i = 0;
+    for (i = 0; i < count; ++i) {
+	algorithms->ep.deinit(algorithms->privateData);
+	algorithms->privateData = NULL;
+    }
+
+    free(algorithms);
+}
+
+void initData(int *data, int dataSize, enum initialState state) {
+    int i = 0;
+
+    switch (state) {
+    default:
+	SDL_Log("InitData: defaulting");
+
+    //intentional fallthrough
+    case SORTED:
+	SDL_Log("InitData: SORTED dataSize %d", dataSize);
+       for (i = 0; i < dataSize; ++i) {
+	    data[i] = i % (dataSize + 1) + 1;
+       }
+       break;
+
+    case REVERSE_SORTED:
+	SDL_Log("InitData: REVERSE_SORTED");
+       break;
+
+    case RANDOM:
+	SDL_Log("InitData: RANDOM");
+       break;
+    }
 }
 
 int main(int argc, char* argv[]) {
     struct visualSorter sorter = {NULL, NULL, {0,0,0}};
     bool quit = false;
+    int data [ARRAY_SIZE];
+    int dataSize = ARRAY_SIZE;
 
     //intialized SDL, create window
     if(!init(&sorter)) {
@@ -257,18 +330,22 @@ int main(int argc, char* argv[]) {
 	quit = true;
     }
 
-    SDL_Log("initializing %s", list[0].friendlyName);
-    list[0].initAlgorithm(NULL, 0, NULL, NULL);
-
     setLayout(&sorter.layout);
     setBar(&sorter.bar);
 
-    alg_init();
+    initData(data, dataSize, SORTED);
+
+    if (0 > alg_init(&sorter, data, dataSize)) {
+	SDL_Log("failed to initialize algorithms");
+	quit = true;
+    }
 
     while(!quit) {
 	quit = loopHandler(sorter);
     }
 
+    alg_deinit(sorter.algorithms, sorter.numAlgs);
+    sorter.algorithms = NULL;
     cleanup(&sorter);
     return 0;
 }
