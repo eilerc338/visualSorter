@@ -33,6 +33,7 @@ struct algDesc list[] = {
 };
 
 struct algContext {
+    int index;
     struct entryPoints ep;
     void *privateData;
 };
@@ -205,7 +206,17 @@ bool drawScreen(struct visualSorter sorter) {
 
     for (i = 0; i < sorter.numAlgs; ++i) {
 	struct algContext alg = sorter.algorithms[i];
-	drawState(sorter, alg.ep.getData(alg.privateData), alg.ep.getDataSize(alg.privateData));
+	int size = alg.ep.getDataSize(alg.privateData);
+	int data[size];
+
+	//gonna need to make a copy of data in getData and draw the copy so that I can respect 
+	//mutexes and I can grab the mutex inside of getData
+	if (0 != alg.ep.getData(alg.privateData, data, &size)) {
+	    SDL_Log("failure getting data. Algorithm %s", list[alg.index].friendlyName);
+	    return false;
+	}
+
+	drawState(sorter, data, size);
     }
 
     //todo draw the states in a loop
@@ -218,6 +229,11 @@ bool drawScreen(struct visualSorter sorter) {
     return true;
 }
 
+bool step(struct visualSorter sorter) {
+    sorter.algorithms[0].ep.doStep(sorter.algorithms[0].privateData);
+    return true;
+}
+
 bool loopHandler(struct visualSorter sorter) {
     SDL_Event e;
 
@@ -227,6 +243,10 @@ bool loopHandler(struct visualSorter sorter) {
 	    return true;
 	}
     }
+
+    if(!step(sorter)) {
+	return true;
+    }	
 
     if(!drawScreen(sorter)) {
 	return true;
@@ -278,6 +298,7 @@ int alg_init(struct visualSorter *sorter, int *data, int dataSize) {
     for (i = 0; i < sorter->numAlgs; ++i) {
 	list[i].add(&sorter->algorithms[i].ep);
 	sorter->algorithms[i].privateData = sorter->algorithms[i].ep.init(data, dataSize);
+	sorter->algorithms[i].index = i;
     }
 
     return 0;
@@ -310,6 +331,9 @@ void initData(int *data, int dataSize, enum initialState state) {
 
     case REVERSE_SORTED:
 	SDL_Log("InitData: REVERSE_SORTED");
+       for (i = 0; i < dataSize; ++i) {
+	    data[i] = ((dataSize-1) - i) % (dataSize + 1) + 1;
+       }
        break;
 
     case RANDOM:
@@ -333,7 +357,7 @@ int main(int argc, char* argv[]) {
     setLayout(&sorter.layout);
     setBar(&sorter.bar);
 
-    initData(data, dataSize, SORTED);
+    initData(data, dataSize, REVERSE_SORTED);
 
     if (0 > alg_init(&sorter, data, dataSize)) {
 	SDL_Log("failed to initialize algorithms");

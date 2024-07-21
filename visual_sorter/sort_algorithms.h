@@ -4,7 +4,7 @@
  struct entryPoints {
     void* (*init)(int *data, size_t dataSize);
     void (*doStep)(void *privateData);
-    int* (*getData)(void *privateData);
+    int (*getData)(void *privateData, int *dataOut, int *dataSize);
     size_t (*getDataSize)(void *privateData);
     void (*deinit)(void *context);
 };

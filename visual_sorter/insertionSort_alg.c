@@ -7,51 +7,93 @@ struct insertionContext {
     int *data;
     size_t dataSize;
     bool finished;
+    bool exit_thread;
     pthread_t thread;
+    pthread_cond_t cond;
+    pthread_mutex_t mutex;
 };
-
-void insertion_deinit(void *context) {
-    struct insertionContext *ins = (struct insertionContext*) context;
-    free(ins->data);
-    free(ins);
-    return;
-}
 
 void insertion_doStep(void *privateData) {
     struct insertionContext *context = (struct insertionContext *) privateData;
-    SDL_Log("insertion_doStep: enter");
+    pthread_cond_signal(&context->cond);
+}
+
+void threadWait() {
 }
 
 void* insertion_sort(void *privateData) {
     struct insertionContext *context = (struct insertionContext *) privateData;
     int i = 1;
     SDL_Log("insertion_sort: enter");
-    /*
+
+    pthread_mutex_lock(&context->mutex);
 
     for (i = 1; i < context->dataSize; ++i) {
+
 	int j = i-1;
-	while(j > 0 && context->data[j+1] < context->data[j]) {
-	    int tmp = context->data[j+1];
+	while (j >= 0 && (context->data[j+1] < context->data[j])) {
+	    int tmp;
+	    //threadWait();
+	    if (context->exit_thread) {
+		pthread_mutex_unlock(&context->mutex);
+		SDL_Log("insertion_sort: exit_thread");
+		return NULL;
+	    }
+	    //SDL_Log("insertion_sort: thread waiting");
+	    pthread_cond_wait(&context->cond, &context->mutex);
+	    //SDL_Log("insertion_sort: thread released");
+	    tmp = context->data[j+1];
 	    context->data[j+1] = context->data[j];
-	    context->data[j];
+	    context->data[j] = tmp;
+	    j--;
 	}
     }
+
     context->finished = true;
-    */
+    pthread_mutex_unlock(&context->mutex);
+
     SDL_Log("insertion_sort finished");
     return NULL;
 }
 
-int* insertion_getData(void *privateData) {
+int insertion_getData(void *privateData, int *dataOut, int *dataSize) {
     struct insertionContext *context = (struct insertionContext *) privateData;
+    int ret = 0;
 
-    return context->data;
+    pthread_mutex_lock(&context->mutex);
+
+    if (*dataSize >= context->dataSize) {
+	memcpy(dataOut, context->data, sizeof(int) * context->dataSize);
+    } else {
+	ret = -1;
+    }
+
+    pthread_mutex_unlock(&context->mutex);
+
+    *dataSize = context->dataSize;
+    return ret;
 }
 
 size_t insertion_getDataSize(void *privateData) {
     struct insertionContext *context = (struct insertionContext *) privateData;
 
     return context->dataSize;
+}
+
+void insertion_deinit(void *context) {
+    struct insertionContext *ins = (struct insertionContext*) context;
+    ins->exit_thread = true;
+    SDL_Log("insertion sort: signal thread for deinit");
+    pthread_cond_signal(&ins->cond);
+    if (0 != pthread_join(ins->thread, NULL)) {
+	SDL_Log("insertion sort: thread failed to join");
+    }
+    pthread_mutex_destroy(&ins->mutex);
+    pthread_cond_destroy(&ins->cond);
+
+    free(ins->data);
+    free(ins);
+    return;
 }
 
 void* insertion_init(int *data, size_t dataSize) {
@@ -64,13 +106,29 @@ void* insertion_init(int *data, size_t dataSize) {
     memcpy(context->data, data, sizeof(int) * dataSize);
     context->dataSize = dataSize;
     context->finished = false;
+    context->exit_thread = false;
 
-    if (pthread_create(&context->thread, NULL, &insertion_sort, context)){
+    if (pthread_cond_init(&context->cond, NULL)) {
+	SDL_Log("insertion sort: failed to init condition variable");
+	goto dealloc;
+    }
+
+    if (pthread_mutex_init(&context->mutex, NULL)) {
+	SDL_Log("insertion sort: failed to init mutex");
+	goto dealloc;
+    }
+
+    if (pthread_create(&context->thread, NULL, &insertion_sort, context)) {
 	SDL_Log("pthread_create error");
+	goto dealloc;
     }
 
     SDL_Log("insertion_init: exit");
     return (void *) context;
+
+dealloc:
+    insertion_deinit(context);
+    return NULL;
 }
 
 bool insertionAdd(struct entryPoints *ep) {
