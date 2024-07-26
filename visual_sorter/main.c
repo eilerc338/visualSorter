@@ -5,11 +5,29 @@
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 
-//draw color
-#define DRAW_COLOR_R 0xFF
-#define DRAW_COLOR_G 0xFF
-#define DRAW_COLOR_B 0xFF
-#define DRAW_COLOR_A SDL_ALPHA_OPAQUE
+//MAIN color
+#define MAIN_COLOR_R 0xFF
+#define MAIN_COLOR_G 0xFF
+#define MAIN_COLOR_B 0xFF
+#define MAIN_COLOR_A SDL_ALPHA_OPAQUE
+
+//red color
+#define RED_COLOR_R 0xFF
+#define RED_COLOR_G 0x00
+#define RED_COLOR_B 0x00
+#define RED_COLOR_A SDL_ALPHA_OPAQUE
+
+//green color
+#define GREEN_COLOR_R 0x00
+#define GREEN_COLOR_G 0xFF
+#define GREEN_COLOR_B 0x00
+#define GREEN_COLOR_A SDL_ALPHA_OPAQUE
+
+//blue color
+#define BLUE_COLOR_R 0x00
+#define BLUE_COLOR_G 0x00
+#define BLUE_COLOR_B 0xFF
+#define BLUE_COLOR_A SDL_ALPHA_OPAQUE
 
 //clear color
 #define CLEAR_COLOR_R 0x00
@@ -17,10 +35,25 @@
 #define CLEAR_COLOR_B 0x00
 #define CLEAR_COLOR_A SDL_ALPHA_OPAQUE
 
-#define CUSHION	2	//pixels between bars
-#define ARRAY_SIZE 120
-#define VAL_MAX ARRAY_SIZE
+#define CUSHION		2	//pixels between bars
+#define BORDER_WIDTH	6
+#define BUMPER 		((BORDER_WIDTH/2) + CUSHION)
+#define ARRAY_SIZE 	120
+#define VAL_MAX 	ARRAY_SIZE
 
+enum initialState {
+    SORTED,
+    REVERSE_SORTED,
+    RANDOM,
+};
+
+enum color {
+    CLEAR,
+    MAIN,
+    RED,
+    GREEN,
+    BLUE,
+};
 
 struct algDesc {
     char friendlyName[FILENAME_MAX];
@@ -33,28 +66,18 @@ struct algDesc list[] = {
 };
 
 struct algContext {
-    int index;
+    int tileStartX;
+    int tileStartY;
     struct entryPoints ep;
     void *privateData;
 };
 
-/*
-struct algData {
-    int data[ARRAY_SIZE];
-    int size;
-};
-*/
-
-enum initialState {
-    SORTED,
-    REVERSE_SORTED,
-    RANDOM,
-};
-
 struct layout {
-    int numTiles;
+    //int numTiles;
     int rows;
     int cols;
+    int tileWidth;
+    int tileHeight;
 };
 
 struct bar {
@@ -69,11 +92,36 @@ struct visualSorter {
     SDL_Renderer *mainRenderer;
     struct layout layout;
     struct bar bar;
-    int numAlgs;
 
     //pointer to a malloced array
     struct algContext *algorithms;
+    int numAlgs;
 };
+
+void setColor(struct visualSorter sorter, enum color color) {
+    //todo add different color options in switch
+    switch (color) {
+    case CLEAR:
+	SDL_SetRenderDrawColor(sorter.mainRenderer, CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
+	break;
+
+    case MAIN:
+	SDL_SetRenderDrawColor(sorter.mainRenderer, MAIN_COLOR_R, MAIN_COLOR_G, MAIN_COLOR_B, MAIN_COLOR_A);
+	break;
+
+    case RED:
+	SDL_SetRenderDrawColor(sorter.mainRenderer, RED_COLOR_R, RED_COLOR_G, RED_COLOR_B, RED_COLOR_A);
+	break;
+
+    case GREEN:
+	SDL_SetRenderDrawColor(sorter.mainRenderer, GREEN_COLOR_R, GREEN_COLOR_G, GREEN_COLOR_B, GREEN_COLOR_A);
+	break;
+
+    case BLUE:
+	SDL_SetRenderDrawColor(sorter.mainRenderer, BLUE_COLOR_R, BLUE_COLOR_G, BLUE_COLOR_B, BLUE_COLOR_A);
+	break;
+    }
+}
 
 bool init(struct visualSorter *sorter) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -91,8 +139,8 @@ bool init(struct visualSorter *sorter) {
     sorter->mainWin = SDL_CreateWindow( "Visual Sorter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     if( sorter->mainWin == NULL )
     {
-    	printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
-    	return false;
+	printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
+	return false;
     }
     else
     {
@@ -116,7 +164,6 @@ bool init(struct visualSorter *sorter) {
 }
 
 void cleanup(struct visualSorter *sorter) {
-
     //Destroy window	
     SDL_DestroyRenderer(sorter->mainRenderer);
     SDL_DestroyWindow(sorter->mainWin);
@@ -128,7 +175,7 @@ void cleanup(struct visualSorter *sorter) {
 }
 
 bool clearScreen(struct visualSorter sorter) {
-    SDL_SetRenderDrawColor(sorter.mainRenderer, CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
+    setColor(sorter, CLEAR);
     if(0 > SDL_RenderClear(sorter.mainRenderer)) {
 	SDL_Log("SDL_RenderClear: error = %s", SDL_GetError());
 	return false;
@@ -137,40 +184,78 @@ bool clearScreen(struct visualSorter sorter) {
 	return true;
 }
 
+SDL_Rect makeRect(int x, int y, int w, int h) {
+    SDL_Rect rect = {x, y, w, h};
+    return rect;
+}
+
 //draw the borders around sort windows
 bool drawBorders(struct visualSorter sorter) {
-    //this doesn't actually draw a border yet, jut one rectangle
-    /*
-    SDL_Rect border = {SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 10, SCREEN_HEIGHT/3};
-    SDL_SetRenderDrawColor(sorter.mainRenderer, DRAW_COLOR_R, DRAW_COLOR_G, DRAW_COLOR_B, DRAW_COLOR_A);
+    int i = 0;
+    SDL_Rect border;
+
+    setColor(sorter, MAIN);
+    //top
+    border = makeRect(0, 0, SCREEN_WIDTH, BORDER_WIDTH/2);
     if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
 	SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
 	return false;
     }
-    */
+
+    //bottom
+    border = makeRect(0, SCREEN_HEIGHT-(BORDER_WIDTH/2), SCREEN_WIDTH, BORDER_WIDTH/2);
+    if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
+	SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	return false;
+    }
+
+    //left
+    border = makeRect(0, 0, BORDER_WIDTH/2, SCREEN_HEIGHT);
+    if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
+	SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	return false;
+    }
+
+    //right
+    border = makeRect(SCREEN_WIDTH-(BORDER_WIDTH/2), 0, BORDER_WIDTH/2, SCREEN_HEIGHT);
+    if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
+	SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	return false;
+    }
+
+    //vertical borders
+    for (i = 1; i < sorter.layout.cols; ++i) {
+	border = makeRect((i * sorter.layout.tileWidth) - (BORDER_WIDTH/2), 0, BORDER_WIDTH, SCREEN_HEIGHT);
+	if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
+	    SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	    return false;
+	}
+    }
+
+    //horizontal borders
+    for (i = 1; i < sorter.layout.rows; ++i) {
+	border = makeRect(0, (i * sorter.layout.tileHeight) - (BORDER_WIDTH)/2, SCREEN_WIDTH, BORDER_WIDTH);
+	if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
+	    SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+	    return false;
+	}
+    }
 
     return true;
 }
 
-void setColorClear(struct visualSorter sorter) {
-    SDL_SetRenderDrawColor(sorter.mainRenderer, CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
-}
-
-void setColorDraw(struct visualSorter sorter) {
-    SDL_SetRenderDrawColor(sorter.mainRenderer, DRAW_COLOR_R, DRAW_COLOR_G, DRAW_COLOR_B, DRAW_COLOR_A);
-}
-
-bool drawState(struct visualSorter sorter, int *vals, int size) {
-    int bottom = SCREEN_HEIGHT - CUSHION;
+bool drawState(struct visualSorter sorter, int startX, int startY, int *vals, int size) {
+    struct layout layout = sorter.layout;
+    int bottom = layout.tileHeight - BUMPER;
     int i = 0;
     struct bar bar = sorter.bar;
 
-    setColorDraw(sorter);
+    setColor(sorter, MAIN);
 
     //for each value in vals, draw rectangle
     for(i = 0; i < size; ++i) {
 	int barHeight = vals[i] * bar.heightRes;
-	SDL_Rect barRect = {bar.frontPorch + (i * bar.stride), bottom - barHeight, bar.width, barHeight};
+	SDL_Rect barRect = {startX + bar.frontPorch + (i * bar.stride), startY + bottom - barHeight, bar.width, barHeight};
 	if(0 > SDL_RenderFillRect(sorter.mainRenderer, &barRect)) {
 	    SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
 	    return false;
@@ -180,20 +265,6 @@ bool drawState(struct visualSorter sorter, int *vals, int size) {
     return true;
 }
 
-/*
-bool drawAllStates(struct visualSorter sorter) {
-   //todo: 
-   //do
-
-   //actually, pass in starter values once at beginning
-    if (!drawState(sorter, vals, ARRAY_SIZE)) {
-	return false;
-    }
-
-    return true;
-}
-*/
-
 bool drawScreen(struct visualSorter sorter) {
     int i = 0;
     if(!clearScreen(sorter)) {
@@ -201,36 +272,34 @@ bool drawScreen(struct visualSorter sorter) {
     }
 
     if(!drawBorders(sorter)) {
-	return false;
+        return false;
     }
 
+    //draw the data for each algorithm
     for (i = 0; i < sorter.numAlgs; ++i) {
 	struct algContext alg = sorter.algorithms[i];
 	int size = alg.ep.getDataSize(alg.privateData);
 	int data[size];
 
-	//gonna need to make a copy of data in getData and draw the copy so that I can respect 
-	//mutexes and I can grab the mutex inside of getData
 	if (0 != alg.ep.getData(alg.privateData, data, &size)) {
-	    SDL_Log("failure getting data. Algorithm %s", list[alg.index].friendlyName);
+	    SDL_Log("failure getting data. Algorithm %s", list[i].friendlyName);
 	    return false;
 	}
 
-	drawState(sorter, data, size);
+	//SDL_Log("startX %d, startY %d", alg.tileStartX, alg.tileStartY);
+	drawState(sorter, alg.tileStartX, alg.tileStartY, data, size);
     }
-
-    //todo draw the states in a loop
-    /*
-    if(!drawAllStates(sorter)) {
-	return false;
-    }
-    */
 
     return true;
 }
 
 bool step(struct visualSorter sorter) {
-    sorter.algorithms[0].ep.doStep(sorter.algorithms[0].privateData);
+    int i;
+
+    for (i = 0; i < sorter.numAlgs; ++i) {
+	struct algContext alg = sorter.algorithms[i];
+	alg.ep.doStep(alg.privateData);
+    }
     return true;
 }
 
@@ -259,21 +328,57 @@ bool loopHandler(struct visualSorter sorter) {
 
 }
 
-void setLayout(struct layout *layout) {
-    layout->numTiles = 2;
-    layout->rows = 1;
-    layout->cols = 2;
+void setLayout(struct visualSorter *sorter) {
+    int i;
+    int j;
+    int count = 1;
+    float targetAspect = (float)SCREEN_WIDTH / SCREEN_HEIGHT;
+
+    sorter->layout.rows = 1;
+    sorter->layout.cols = 1;
+
+    //figure out rows and columns using screen resolution and number of algs
+    for (i = 1; i < sorter->numAlgs; ++i) {
+	int rows = sorter->layout.rows;
+	int cols = sorter->layout.cols;
+
+	if (++count > rows * cols) {
+	    if (abs(((cols+1) / rows) - targetAspect) <= abs((cols / (rows+1)) - targetAspect)) {
+		sorter->layout.cols++;
+	    } else {
+		sorter->layout.rows++;
+	    }
+	}
+    }
+
+    sorter->layout.tileWidth = (SCREEN_WIDTH / sorter->layout.cols);
+    sorter->layout.tileHeight = (SCREEN_HEIGHT / sorter->layout.rows);
+
+    //set start location for tiles
+    count = 0;
+    for (i = 0; i < sorter->layout.rows; ++i) {
+	for (j = 0; j < sorter->layout.cols; ++j) {
+	    struct algContext *alg = &sorter->algorithms[count];
+	    alg->tileStartX = (j * sorter->layout.tileWidth);
+	    alg->tileStartY = (i * sorter->layout.tileHeight);
+
+	    if (++count >= sorter->numAlgs) {
+		return;
+	    }
+	}
+    }
 }
 
-void setBar(struct bar *bar) {
-    bar->width = ((SCREEN_WIDTH - CUSHION)/ARRAY_SIZE) - CUSHION ;
-    SDL_Log("bar width = %d", bar->width);
-    bar->heightRes = (SCREEN_HEIGHT - (2 * CUSHION)) / (VAL_MAX);
-    SDL_Log("bar heightRes = %d", bar->heightRes);
-    bar->stride = bar->width + CUSHION;
-    SDL_Log("bar stride = %d", bar->stride);
-    bar->frontPorch = (SCREEN_WIDTH - (ARRAY_SIZE * bar->stride))/2;
-    SDL_Log("bar front porch = %d", bar->frontPorch);
+void setBar(struct visualSorter *sorter) {
+    SDL_Log("sorter->layout.tileWidth %d", sorter->layout.tileWidth);
+    sorter->bar.width = ((sorter->layout.tileWidth - CUSHION)/ARRAY_SIZE) - CUSHION;
+    SDL_Log("sorter->bar.width %d", sorter->bar.width);
+    sorter->bar.heightRes = (sorter->layout.tileHeight - (2 * CUSHION)) / (VAL_MAX);
+    SDL_Log("sorter->bar.heightRes %d", sorter->bar.heightRes);
+    sorter->bar.stride = sorter->bar.width + CUSHION;
+    SDL_Log("sorter->bar.stride %d", sorter->bar.stride);
+    sorter->bar.frontPorch = (sorter->layout.tileWidth - (ARRAY_SIZE * sorter->bar.stride))/2;
+    SDL_Log("sorter->bar.frontPorch %d", sorter->bar.frontPorch);
 }
 
 int alg_init(struct visualSorter *sorter, int *data, int dataSize) {
@@ -287,7 +392,7 @@ int alg_init(struct visualSorter *sorter, int *data, int dataSize) {
 	desc++;
     }
 
-    SDL_Log("number of Algorithms found: %d", sorter->numAlgs);
+    SDL_Log("%d Algorithms found: ", sorter->numAlgs);
 
     sorter->algorithms = (struct algContext *) malloc(sizeof(struct algContext) * sorter->numAlgs);
     if (sorter->algorithms  == NULL) {
@@ -298,7 +403,6 @@ int alg_init(struct visualSorter *sorter, int *data, int dataSize) {
     for (i = 0; i < sorter->numAlgs; ++i) {
 	list[i].add(&sorter->algorithms[i].ep);
 	sorter->algorithms[i].privateData = sorter->algorithms[i].ep.init(data, dataSize);
-	sorter->algorithms[i].index = i;
     }
 
     return 0;
@@ -307,8 +411,8 @@ int alg_init(struct visualSorter *sorter, int *data, int dataSize) {
 void alg_deinit(struct algContext *algorithms, int count) {
     int i = 0;
     for (i = 0; i < count; ++i) {
-	algorithms->ep.deinit(algorithms->privateData);
-	algorithms->privateData = NULL;
+	algorithms[i].ep.deinit(algorithms[i].privateData);
+	algorithms[i].privateData = NULL;
     }
 
     free(algorithms);
@@ -343,7 +447,7 @@ void initData(int *data, int dataSize, enum initialState state) {
 }
 
 int main(int argc, char* argv[]) {
-    struct visualSorter sorter = {NULL, NULL, {0,0,0}};
+    struct visualSorter sorter;// = {NULL, NULL, {0,0,0}};
     bool quit = false;
     int data [ARRAY_SIZE];
     int dataSize = ARRAY_SIZE;
@@ -354,8 +458,6 @@ int main(int argc, char* argv[]) {
 	quit = true;
     }
 
-    setLayout(&sorter.layout);
-    setBar(&sorter.bar);
 
     initData(data, dataSize, REVERSE_SORTED);
 
@@ -363,6 +465,9 @@ int main(int argc, char* argv[]) {
 	SDL_Log("failed to initialize algorithms");
 	quit = true;
     }
+
+    setLayout(&sorter);
+    setBar(&sorter);
 
     while(!quit) {
 	quit = loopHandler(sorter);
