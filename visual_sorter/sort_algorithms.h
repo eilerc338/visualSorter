@@ -10,6 +10,7 @@
 };
 
 bool insertionAdd(struct entryPoints *ep);
+bool mergeAdd(struct entryPoints *ep);
 
 #endif //__SORT_ALGORITHMS_H__
 

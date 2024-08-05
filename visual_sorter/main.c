@@ -62,6 +62,7 @@ struct algDesc {
 
 struct algDesc list[] = {
     {"Insertion Sort", &insertionAdd},
+    {"Merger Sort", &mergeAdd},
     {"", NULL}
 };
 

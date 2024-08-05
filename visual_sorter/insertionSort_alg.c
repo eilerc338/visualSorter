@@ -18,9 +18,6 @@ void insertion_doStep(void *privateData) {
     pthread_cond_signal(&context->cond);
 }
 
-void threadWait() {
-}
-
 void* insertion_sort(void *privateData) {
     struct insertionContext *context = (struct insertionContext *) privateData;
     int i = 1;
@@ -29,11 +26,9 @@ void* insertion_sort(void *privateData) {
     pthread_mutex_lock(&context->mutex);
 
     for (i = 1; i < context->dataSize; ++i) {
-
 	int j = i-1;
 	while (j >= 0 && (context->data[j+1] < context->data[j])) {
 	    int tmp;
-	    //threadWait();
 	    if (context->exit_thread) {
 		pthread_mutex_unlock(&context->mutex);
 		SDL_Log("insertion_sort: exit_thread");
@@ -80,19 +75,19 @@ size_t insertion_getDataSize(void *privateData) {
     return context->dataSize;
 }
 
-void insertion_deinit(void *context) {
-    struct insertionContext *ins = (struct insertionContext*) context;
-    ins->exit_thread = true;
-    SDL_Log("insertion sort: signal thread for deinit");
-    pthread_cond_signal(&ins->cond);
-    if (0 != pthread_join(ins->thread, NULL)) {
-	SDL_Log("insertion sort: thread failed to join");
+void insertion_deinit(void *privateData) {
+    struct insertionContext *context = (struct insertionContext*) privateData;
+    context->exit_thread = true;
+    SDL_Log("contextertion sort: signal thread for deinit");
+    pthread_cond_signal(&context->cond);
+    if (0 != pthread_join(context->thread, NULL)) {
+	SDL_Log("contextertion sort: thread failed to join");
     }
-    pthread_mutex_destroy(&ins->mutex);
-    pthread_cond_destroy(&ins->cond);
+    pthread_mutex_destroy(&context->mutex);
+    pthread_cond_destroy(&context->cond);
 
-    free(ins->data);
-    free(ins);
+    free(context->data);
+    free(context);
     return;
 }
 
