@@ -9,7 +9,7 @@ OBJS = $(wildcard *.c)
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = visual_sorter_c
 
-CFLAGS = -Wall -g $$(sdl2-config --cflags)
+CFLAGS = -Wall -g -pedantic-errors $$(sdl2-config --cflags)
 LIBS = $$(sdl2-config --libs)
 
 #This is the target that compiles our executable

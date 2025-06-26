@@ -60,6 +60,7 @@ struct algDesc {
     bool (*add)(struct entryPoints *ep);
 };
 
+    //{"Quick Sort", &quickAdd},
 struct algDesc list[] = {
     {"Insertion Sort", &insertionAdd},
     {"Merger Sort", &mergeAdd},
@@ -458,7 +459,6 @@ int main(int argc, char* argv[]) {
 	SDL_Log("Error initializing SDL");
 	quit = true;
     }
-
 
     initData(data, dataSize, REVERSE_SORTED);
 
