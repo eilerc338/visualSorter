@@ -41,40 +41,40 @@ struct visualSorter {
 
 bool init(struct visualSorter *sorter) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0) {
-	SDL_Log("Error SDL_Init: %s", SDL_GetError());
-	return false;
+        SDL_Log("Error SDL_Init: %s", SDL_GetError());
+        return false;
     }
 
     //Set texture filtering to linear
     if( !SDL_SetHint( SDL_HINT_RENDER_SCALE_QUALITY, "1" ) )
     {
-    	printf( "Warning: Linear texture filtering not enabled!" );
+        printf( "Warning: Linear texture filtering not enabled!" );
     }
-    
+
     //Create window
     sorter->mainWin = SDL_CreateWindow( "Visual Sorter", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
     if( sorter->mainWin == NULL )
     {
-    	printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
-    	return false;
+        printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
+        return false;
     }
     else
     {
-    	//Create renderer for window
-    	sorter->mainRenderer = SDL_CreateRenderer( sorter->mainWin, -1, SDL_RENDERER_ACCELERATED );
-    
-    	//try software render if hardware fails
-    	if( sorter->mainRenderer == NULL )
-    	{
-    		SDL_Log( "Accelerated renderer could not be created! SDL Error: %s\nSwitching to software renderer", SDL_GetError() );
-    		sorter->mainRenderer = SDL_CreateRenderer( sorter->mainWin, -1, SDL_RENDERER_SOFTWARE);
-    	}
-    
-    	if( sorter->mainRenderer == NULL )
-    	{
-    		printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
-    		return false;
-    	}
+        //Create renderer for window
+        sorter->mainRenderer = SDL_CreateRenderer( sorter->mainWin, -1, SDL_RENDERER_ACCELERATED );
+
+        //try software render if hardware fails
+        if( sorter->mainRenderer == NULL )
+        {
+            SDL_Log( "Accelerated renderer could not be created! SDL Error: %s\nSwitching to software renderer", SDL_GetError() );
+            sorter->mainRenderer = SDL_CreateRenderer( sorter->mainWin, -1, SDL_RENDERER_SOFTWARE);
+        }
+
+        if( sorter->mainRenderer == NULL )
+        {
+            printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError() );
+            return false;
+        }
     }
     return true;
 }
@@ -94,24 +94,24 @@ void close(struct visualSorter *sorter) {
 bool clearScreen(struct visualSorter sorter) {
     SDL_SetRenderDrawColor(sorter.mainRenderer, CLEAR_COLOR_R, CLEAR_COLOR_G, CLEAR_COLOR_B, CLEAR_COLOR_A);
     if(0 > SDL_RenderClear(sorter.mainRenderer)) {
-	SDL_Log("SDL_RenderClear: error = %s", SDL_GetError());
-	return false;
+        SDL_Log("SDL_RenderClear: error = %s", SDL_GetError());
+        return false;
     }
 
-	return true;
+    return true;
 }
 
 //draw the borders around sort windows
 bool drawBorders(struct visualSorter sorter) {
     //this doesn't actually draw a border yet, jut one rectangle
     /*
-    SDL_Rect border = {SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 10, SCREEN_HEIGHT/3};
-    SDL_SetRenderDrawColor(sorter.mainRenderer, DRAW_COLOR_R, DRAW_COLOR_G, DRAW_COLOR_B, DRAW_COLOR_A);
-    if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
-	SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
-	return false;
-    }
-    */
+       SDL_Rect border = {SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 10, SCREEN_HEIGHT/3};
+       SDL_SetRenderDrawColor(sorter.mainRenderer, DRAW_COLOR_R, DRAW_COLOR_G, DRAW_COLOR_B, DRAW_COLOR_A);
+       if(0 > SDL_RenderFillRect(sorter.mainRenderer, &border)) {
+       SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+       return false;
+       }
+       */
 
     return true;
 }
@@ -133,31 +133,31 @@ bool drawState(struct visualSorter sorter, int *vals, int size) {
 
     //for each value in vals, draw rectangle
     for(i = 0; i < size; ++i) {
-	int barHeight = vals[i] * bar.heightRes;
-	SDL_Rect barRect = {CUSHION + (i * bar.stride), bottom - barHeight, bar.width, barHeight};
-	if(0 > SDL_RenderFillRect(sorter.mainRenderer, &barRect)) {
-	    SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
-	    return false;
-	}
+        int barHeight = vals[i] * bar.heightRes;
+        SDL_Rect barRect = {CUSHION + (i * bar.stride), bottom - barHeight, bar.width, barHeight};
+        if(0 > SDL_RenderFillRect(sorter.mainRenderer, &barRect)) {
+            SDL_Log("SDL_RenderDrawRect: error = %s", SDL_GetError());
+            return false;
+        }
 
     }
     return true;
 }
 
 bool drawAllStates(struct visualSorter sorter) {
-   int vals[ARRAY_SIZE] = {0};
-   int i = 0;
+    int vals[ARRAY_SIZE] = {0};
+    int i = 0;
 
-   //todo: don't fill array with fake values
-   for (i = 0; i < ARRAY_SIZE; ++i) {
-       if (i <= VAL_MAX) { 
-	    vals[i] = i % (VAL_MAX + 1) + 1;
-	    //SDL_Log("%d: %d", i, vals[i]); 
-       }
-   }
+    //todo: don't fill array with fake values
+    for (i = 0; i < ARRAY_SIZE; ++i) {
+        if (i <= VAL_MAX) { 
+            vals[i] = i % (VAL_MAX + 1) + 1;
+            //SDL_Log("%d: %d", i, vals[i]); 
+        }
+    }
 
     if (!drawState(sorter, vals, ARRAY_SIZE)) {
-	return false;
+        return false;
     }
 
     return true;
@@ -165,15 +165,15 @@ bool drawAllStates(struct visualSorter sorter) {
 
 bool drawScreen(struct visualSorter sorter) {
     if(!clearScreen(sorter)) {
-	return false;
+        return false;
     }
 
     if(!drawBorders(sorter)) {
-	return false;
+        return false;
     }
 
     if(!drawAllStates(sorter)) {
-	return false;
+        return false;
     }
 
     return true;
@@ -183,14 +183,14 @@ bool loopHandler(struct visualSorter sorter) {
     SDL_Event e;
 
     while(SDL_PollEvent(&e) != 0) {
-	//user requests to quit
-	if(e.type == SDL_QUIT) {
-	    return true;
-	}
+        //user requests to quit
+        if(e.type == SDL_QUIT) {
+            return true;
+        }
     }
 
     if(!drawScreen(sorter)) {
-	return true;
+        return true;
     }
 
     //Update Screen
@@ -219,17 +219,17 @@ int main(int argc, char* argv[]) {
     struct visualSorter sorter = {NULL, NULL, {0,0,0}};
     bool quit = false;
 
-    //intialized SDL, create window
+    //intialize SDL, create window
     if(!init(&sorter)) {
-	SDL_Log("Error initializing SDL");
-	quit = true;
+        SDL_Log("Error initializing SDL");
+        quit = true;
     }
 
     setLayout(&sorter.layout);
     setBar(&sorter.bar);
 
     while(!quit) {
-	quit = loopHandler(sorter);
+        quit = loopHandler(sorter);
     }
 
     close(&sorter);
