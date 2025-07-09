@@ -3,15 +3,11 @@
 
 insertionSort::insertionSort(std::vector<int> initialData) {
 	std::cout << "insertionSort Created" << std::endl;
+	data = initialData;
 }
 
 void insertionSort::doNextStep() {
 	std::cout << "insertionSort::doNextStep())" << std::endl;
-}
-
-const std::vector<int>& insertionSort::getData() {
-	std::cout << "insertionSort::getData()" << std::endl;
-	return data;
 }
 
 int insertionSort::getNumSteps() {

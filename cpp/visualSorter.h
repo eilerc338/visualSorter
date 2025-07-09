@@ -1,0 +1,37 @@
+#pragma once
+
+#include <iostream>
+
+class visualSorter {
+	public:
+		std::vector<std::unique_ptr<algorithm>> algorithms {};
+
+	public:
+		int addAlgorithm(algorithmCreator &algCreator, std::vector<int> &initialData) {
+			algorithms.push_back(algCreator.createAlgorithm(initialData));
+
+			return 0;
+		}
+
+		bool isAllComplete() {
+			for (const auto &a : algorithms) {
+				if (!a->isComplete()) {
+					return false;
+				}
+			}
+			return true;
+		}
+
+		void debugPrintData() {
+			std::cout << "printData" << std::endl;
+			for (const auto &a : algorithms) {
+				std::cout << std::endl;
+				auto data = a->getData();
+
+				for (auto v : data) {
+					std::cout << v << " ";
+				}
+			}
+		}
+
+};
