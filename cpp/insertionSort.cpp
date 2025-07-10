@@ -1,18 +1,17 @@
 #include "algorithm.h"
 #include <iostream>
 
-insertionSort::~insertionSort() {
-	sortThread.join();
-}
-
 insertionSort::insertionSort(std::vector<int> initialData): algorithm(initialData) {
-	std::thread t1(insertionSort::sort, std::ref(*this));
+	std::thread t1(insertionSort::startSort, std::ref(*this));
 	sortThread = std::move(t1);
-
 }
 
-void insertionSort::sort(insertionSort& sort) {
-	dataMgr& dMgr = sort.dMgr;
+void insertionSort::startSort(insertionSort& sort) {
+	sort.sort();
+}
+
+void insertionSort::sort() {
+	//dataMgr& dMgr = sort.dMgr;
 	for (size_t i = 1; i < dMgr.getLength(); ++i) {
 		int j = i-1;
 		int data_j;
@@ -22,6 +21,9 @@ void insertionSort::sort(insertionSort& sort) {
 		dMgr.get(j+1, &data_jplus1);
 
 		while (j >= 0 && (data_jplus1 < data_j)) {
+			if (exit_thread) {
+				return;
+			}
 			dMgr.store(j, data_jplus1);
 			dMgr.store(j+1, data_j);
 			j--;
@@ -34,5 +36,5 @@ void insertionSort::sort(insertionSort& sort) {
 	}
 
 	std::cout << "insertionSort: done" << std::endl;
-	sort.complete = true;
+	complete = true;
 }

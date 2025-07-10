@@ -8,8 +8,11 @@
 
 class algorithm {
 	public:
-		//algorithm() = delete;
-		//~algorithm() = default;
+		~algorithm() {
+			exit_thread = true;
+			sortThread.join();
+		}
+
 		algorithm(std::vector<int> initialData) {
 			dMgr.init(initialData);
 		}
@@ -35,27 +38,27 @@ class algorithm {
 	protected:
 		dataMgr dMgr;
 		bool complete = false;
+		std::thread sortThread;
+		bool exit_thread = false;
 };
 
 class insertionSort : public algorithm {
 	public:
 		insertionSort() = delete;
-		~insertionSort();
 		insertionSort(std::vector<int> initialData);
-		static void sort(insertionSort& sort);
+		static void startSort(insertionSort& sort);
+		void sort();
 		std::string_view getName() override {
 			return name;
 		}
 
 	private:
 		std::string_view name = "Insertion Sort";
-		std::thread sortThread;
 };
 
 class mergeSort : public algorithm {
 	public:
 		mergeSort() = delete;
-		~mergeSort();
 		mergeSort(std::vector<int> initialData);
 		static void sort(mergeSort& sort);
 		std::string_view getName() override {
