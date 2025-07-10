@@ -25,6 +25,7 @@ class visualSorter {
 		void debugPrintData() {
 			std::cout << std::endl;
 			for (const auto &a : algorithms) {
+				std::cout << a->getName() << ": ";
 				auto data = a->getData();
 
 				for (auto v : data) {

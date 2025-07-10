@@ -5,30 +5,11 @@ insertionSort::~insertionSort() {
 	sortThread.join();
 }
 
-insertionSort::insertionSort(std::vector<int> initialData) {
-	dMgr.init(initialData);
-
+insertionSort::insertionSort(std::vector<int> initialData): algorithm(initialData) {
+	std::cout << "insertionSort constructor (initialData)" << std::endl;
 	std::thread t1(insertionSort::sort, std::ref(*this));
 	sortThread = std::move(t1);
 
-}
-
-void insertionSort::doNextStep() {
-	dMgr.release();
-}
-
-int insertionSort::getNumSteps() {
-	std::cout << "insertionSort::getNumSteps()" << std::endl;
-	dMgr.getNumSteps();
-	return 0;
-}
-
-bool insertionSort::isComplete() {
-	return complete;
-}
-
-const std::vector<int>& insertionSort::getData() {
-	return dMgr.getData();
 }
 
 void insertionSort::sort(insertionSort& sort) {
