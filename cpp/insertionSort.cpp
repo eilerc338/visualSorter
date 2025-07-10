@@ -1,4 +1,4 @@
-#include "insertionSort.h"
+#include "algorithm.h"
 #include <iostream>
 
 insertionSort::~insertionSort() {

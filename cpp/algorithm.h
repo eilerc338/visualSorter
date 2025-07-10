@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <thread>
 
 class algorithm {
 	public:
@@ -35,4 +36,19 @@ class algorithm {
 	protected:
 		dataMgr dMgr;
 		bool complete = false;
+};
+
+class insertionSort : public algorithm {
+	public:
+		insertionSort() = delete;
+		~insertionSort();
+		insertionSort(std::vector<int> initialData);
+		static void sort(insertionSort& sort);
+		std::string_view getName() override {
+			return name;
+		}
+
+	private:
+		std::string_view name = "Insertion Sort";
+		std::thread sortThread;
 };
