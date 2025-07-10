@@ -1,4 +1,4 @@
-#include "insertionCreator.h"
+#include "algorithmCreator.h"
 #include "visualSorter.h"
 
 #include <iostream>
@@ -15,7 +15,7 @@ int initAlgorithms(visualSorter &sorter, std::vector<int> &initialData) {
 
 int main(int argc, char* argv[]) {
 	visualSorter sorter;
-	std::cout << "Hello world" << std::endl;
+	std::cout << "Visual Sorter" << std::endl;
 
 	//init generators
 	std::vector<int> initialData = {9,8,7,5};
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
 	//init window
 
 	while (!sorter.isAllComplete()) {
-		std::cout << '\n' << "> ";
+		// for now do one step per pressing enter
 		std::cin.ignore();
 		sorter.doStep();
 

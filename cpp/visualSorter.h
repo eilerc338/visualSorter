@@ -1,5 +1,7 @@
 #pragma once
 
+#include "algorithmCreator.h"
+
 #include <iostream>
 
 class visualSorter {
