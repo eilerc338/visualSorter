@@ -60,12 +60,13 @@ class mergeSort : public algorithm {
 	public:
 		mergeSort() = delete;
 		mergeSort(std::vector<int> initialData);
-		static void sort(mergeSort& sort);
+		void merge(int start, int middle, int end);
+		void sort(int start, int end);
+		static void startSort(mergeSort& sort);
 		std::string_view getName() override {
 			return name;
 		}
 
 	private:
 		std::string_view name = "Merge Sort";
-		std::thread sortThread;
 };
