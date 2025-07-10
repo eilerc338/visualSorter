@@ -11,7 +11,6 @@ class algorithm {
 		//algorithm() = delete;
 		//~algorithm() = default;
 		algorithm(std::vector<int> initialData) {
-			std::cout << "algorithim constructor (initialData)" << std::endl;
 			dMgr.init(initialData);
 		}
 
@@ -50,5 +49,20 @@ class insertionSort : public algorithm {
 
 	private:
 		std::string_view name = "Insertion Sort";
+		std::thread sortThread;
+};
+
+class mergeSort : public algorithm {
+	public:
+		mergeSort() = delete;
+		~mergeSort();
+		mergeSort(std::vector<int> initialData);
+		static void sort(mergeSort& sort);
+		std::string_view getName() override {
+			return name;
+		}
+
+	private:
+		std::string_view name = "Merge Sort";
 		std::thread sortThread;
 };

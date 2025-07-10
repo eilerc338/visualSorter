@@ -7,8 +7,10 @@
 
 int initAlgorithms(visualSorter &sorter, std::vector<int> &initialData) {
 	insertionCreator insCreator;
+	mergeCreator mrgCreator;
 
 	sorter.addAlgorithm(insCreator, initialData);
+	sorter.addAlgorithm(mrgCreator, initialData);
 
 	return 0;
 }

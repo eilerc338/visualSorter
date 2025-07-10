@@ -15,11 +15,10 @@ class insertionCreator : public algorithmCreator {
 			return std::make_unique<insertionSort>(initialData);
 		}
 };
-/*
+
 class mergeCreator : public algorithmCreator {
 	public:
 		std::unique_ptr<algorithm> createAlgorithm(std::vector<int> initialData) override {
 			return std::make_unique<mergeSort>(initialData);
 		}
 };
-*/
