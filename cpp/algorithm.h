@@ -9,13 +9,7 @@ class algorithm {
 		virtual int getNumSteps() = 0;
 		virtual bool isComplete() = 0;
 		virtual ~algorithm() = default;
-
-		virtual const std::vector<int>& getData() {
-			std::cout << "insertionSort::getData()" << std::endl;
-			return data;
-		}
-
+		virtual const std::vector<int>& getData() = 0;
 
 	protected:
-		std::vector<int> data {};
 };
