@@ -1,9 +1,13 @@
 #include "algorithmCreator.h"
 #include "visualSorter.h"
 
+#include <SDL.h>
 #include <iostream>
 #include <memory>
 #include <vector>
+
+#define SCREEN_WIDTH 1600
+#define SCREEN_HEIGHT 900
 
 int initAlgorithms(visualSorter &sorter, std::vector<int> &initialData) {
 	insertionCreator insCreator;

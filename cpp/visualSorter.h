@@ -2,8 +2,6 @@
 
 #include "algorithmCreator.h"
 
-#include <iostream>
-
 class visualSorter {
 	public:
 		std::vector<std::unique_ptr<algorithm>> algorithms {};
@@ -13,6 +11,10 @@ class visualSorter {
 			algorithms.push_back(algCreator.createAlgorithm(initialData));
 
 			return 0;
+		}
+
+		unsigned int getNumAlgorithms() {
+			return algorithms.size();
 		}
 
 		bool isAllComplete() {
