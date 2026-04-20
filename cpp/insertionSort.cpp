@@ -1,11 +1,6 @@
 #include "algorithm.h"
 #include <iostream>
 
-insertionSort::insertionSort(std::vector<int> initialData): algorithm(initialData) {
-	std::thread t1(insertionSort::startSort, std::ref(*this));
-	sortThread = std::move(t1);
-}
-
 void insertionSort::startSort(insertionSort& sort) {
 	sort.sort();
 }
@@ -37,4 +32,10 @@ void insertionSort::sort() {
 
 	std::cout << "insertionSort: done" << std::endl;
 	complete = true;
+}
+
+//constructors / desctructors
+insertionSort::insertionSort(std::vector<int> initialData): algorithm(initialData) {
+	std::thread t1(insertionSort::startSort, std::ref(*this));
+	sortThread = std::move(t1);
 }

@@ -10,7 +10,9 @@
 class algorithm {
 	public:
 		~algorithm() {
+			std::cout << "~algorithm()" << std::endl;
 			exit_thread = true;
+			dMgr.deInit();
 			sortThread.join();
 		}
 

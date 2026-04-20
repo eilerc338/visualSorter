@@ -1,9 +1,7 @@
 #include "algorithmCreator.h"
 #include "visualSorter.h"
 
-#include "SDL.h"
 #include <iostream>
-#include <memory>
 #include <vector>
 
 int main(int argc, char* argv[]) {
@@ -18,22 +16,33 @@ int main(int argc, char* argv[]) {
 	vs.initAlgorithms(initialData);
 
 	//init window
+#if 1
 	if (!vs.initWindow()) {
 		goto FAIL;
 	}
+#endif
 
-	vs.initSurfaces();
+	vs.drawBorders();
+    //Update Screen
+	//vs.updateScreen();
 
-	while (!vs.isAllComplete()) {
+	vs.getSurfaces();
+
+	//while (!vs.isAllComplete()) {
+	while (vs.mainLoop())
+	{
 		// for now do one step per pressing enter
 		//std::cin.ignore();
-		vs.drawBorders();
+		//vs.drawBorders();
 		//vs.doStep();
 
 		//vs.debugPrintData();
 		//showdata()
 	}
-	std::cin.ignore();
+
+	std::cout << "1" << std::endl;
+	//std::cin.ignore();
+	std::cout << "2" << std::endl;
 
 	//showStatistics();
 	//vs.isAllComplete();

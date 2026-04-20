@@ -10,13 +10,15 @@ class visualSorter {
 	public:
 		int initAlgorithms(std::vector<int> &initialData);
 		int addAlgorithm(algorithmCreator &algCreator, std::vector<int> &initialData);
-		bool initSurfaces();
+		bool getSurfaces();
 		unsigned int getNumAlgorithms();
 		bool isAllComplete();
 		void debugPrintData();
 		void doStep();
 		void drawBorders();
 		bool initWindow();
+		void updateScreen();
+		bool mainLoop();
 
 	private:
 		std::vector<std::unique_ptr<algorithm>> algorithms {};
