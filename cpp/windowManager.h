@@ -1,29 +1,56 @@
 #pragma once
 
-struct rectangle {
-	unsigned int xOrigin;
-	unsigned int yOrigin;
-	unsigned int width;
-	unsigned int height;
+#include "SDL.h"
+#include <vector>
+
+typedef SDL_Rect surface_t;
+
+class bar
+{
+	public:
+		bar() = delete;
+		bar(unsigned int xO, unsigned int yO, unsigned int xL, unsigned int yL)
+			: rect{static_cast<int>(xO), static_cast<int>(yO), static_cast<int>(xL), static_cast<int>(yL)} {}
+
+		int draw(SDL_Renderer *renderer)
+		{
+			return SDL_RenderFillRect(renderer, &rect);
+		}
+
+		SDL_Rect rect;
 };
 
-class windowManager {
+class windowManager
+{
 	public:
-		int init (unsigned int width, unsigned int height);
-		int createTiles(unsigned int num);
-		// this returns the drawable area of the tile
-		struct rectangle getDrawArea(int index);
-		std::vector<struct rectangle> getBorders();
+		//constructors
+		windowManager() = default;
+		windowManager(unsigned int width, unsigned int height);
+
+		//getters/setters
+		const surface_t * getSurface()
+		{
+			if (m_nextSurface != surfaces.end()) {
+				return &(*m_nextSurface++);
+			}
+			return nullptr;
+		}
+
+		bool init(unsigned int numSurfaces);
+		void makeLayout(unsigned int numSurfaces);
+		void drawBorders();
 
 	private:
-		unsigned int windowWidth;
-		unsigned int windowHeight;
-		std::vector<std::vector<struct>> tile> tiles;
-};
+		void createBorders();
+		void createSurfaces();
 
-// gonna know how to draw the bars on the tile
-class draw {
-	public:
-		int Rectangle(std::vector<struct rectangle> rectangles);
-		int barGraph(struct rectangle drawArea, std::vector<int> vals);
+		std::vector<surface_t>::iterator m_nextSurface;
+		SDL_Window *m_mainWin = nullptr;
+		SDL_Renderer *m_mainRenderer = nullptr;
+		std::vector<surface_t> surfaces;
+		std::vector<bar> borders;
+		unsigned int m_width;
+		unsigned int m_height;
+		unsigned int m_rows;
+		unsigned int m_columns;
 };

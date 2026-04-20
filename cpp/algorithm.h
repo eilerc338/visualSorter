@@ -1,6 +1,7 @@
 #pragma once
 
 #include "dataMgr.h"
+#include "windowManager.h"
 
 #include <iostream>
 #include <vector>
@@ -17,7 +18,7 @@ class algorithm {
 			dMgr.init(initialData);
 		}
 
-		virtual std::string_view getName() = 0;
+		virtual std::string_view getName() const = 0;
 
 		virtual void doNextStep() {
 			dMgr.release();
@@ -35,11 +36,16 @@ class algorithm {
 			return dMgr.getData();
 		}
 
+		virtual void setSurface(const surface_t *surf) {
+			m_surface = surf;
+		}
+
 	protected:
 		dataMgr dMgr;
 		bool complete = false;
 		std::thread sortThread;
 		bool exit_thread = false;
+		const surface_t *m_surface;
 };
 
 class insertionSort : public algorithm {
@@ -48,7 +54,7 @@ class insertionSort : public algorithm {
 		insertionSort(std::vector<int> initialData);
 		static void startSort(insertionSort& sort);
 		void sort();
-		std::string_view getName() override {
+		std::string_view getName() const override {
 			return name;
 		}
 
@@ -63,7 +69,7 @@ class mergeSort : public algorithm {
 		void merge(int start, int middle, int end);
 		void sort(int start, int end);
 		static void startSort(mergeSort& sort);
-		std::string_view getName() override {
+		std::string_view getName() const override {
 			return name;
 		}
 
