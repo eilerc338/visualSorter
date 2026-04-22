@@ -3,7 +3,7 @@
 #include "algorithmCreator.h"
 #include "windowManager.h"
 
-#define SCREEN_WIDTH 1600
+#define SCREEN_WIDTH 1800
 #define SCREEN_HEIGHT 900
 
 class visualSorter {
@@ -15,9 +15,11 @@ class visualSorter {
 		bool isAllComplete();
 		void debugPrintData();
 		void doStep();
+		void drawGraphs();
 		void drawBorders();
 		bool initWindow();
 		void updateScreen();
+		bool waitStepDone();
 		bool mainLoop();
 
 	private:

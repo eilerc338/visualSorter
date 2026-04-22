@@ -14,14 +14,22 @@ class dataMgr {
 		int getNumSteps();
 		void sort();
 		int release();
+		bool isWaiting();
 		size_t getLength();
+		int getMin() {return m_minV;}
+		int getMax() {return m_maxV;}
 
 		~dataMgr();
 
 	private:
+		bool wait();
+
+		bool m_waiting = false;
 		unsigned int numSteps = 0;
 		std::vector<int> data;
 		std::mutex mutex;
 		std::condition_variable cond;
 		bool exit_thread = false;
+		int m_minV = 0;
+		int m_maxV = 0;
 };

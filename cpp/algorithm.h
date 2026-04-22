@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graph.h"
 #include "dataMgr.h"
 #include "windowManager.h"
 
@@ -7,39 +8,61 @@
 #include <vector>
 #include <thread>
 
-class algorithm {
+class algorithm
+{
 	public:
-		~algorithm() {
+		~algorithm()
+		{
 			std::cout << "~algorithm()" << std::endl;
 			exit_thread = true;
 			dMgr.deInit();
 			sortThread.join();
 		}
 
-		algorithm(std::vector<int> initialData) {
+		algorithm(std::vector<int> initialData)
+		{
 			dMgr.init(initialData);
+		}
+
+		bool drawGraph(SDL_Renderer *renderer)
+		{
+			return bGraph.draw(renderer, dMgr.getData());
 		}
 
 		virtual std::string_view getName() const = 0;
 
-		virtual void doNextStep() {
+		virtual void doNextStep()
+		{
 			dMgr.release();
 		}
 
-		virtual int getNumSteps() {
+		virtual int getNumSteps()
+		{
 			return dMgr.getNumSteps();
 		}
 
-		virtual bool isComplete() {
+		virtual bool isStepDone()
+		{
+			if (isComplete() || dMgr.isWaiting())
+			{
+				return true;
+			}
+			return false;
+		}
+
+		virtual bool isComplete()
+		{
 			return complete;
 		}
 
-		virtual const std::vector<int>& getData() {
+		virtual const std::vector<int>& getData()
+		{
 			return dMgr.getData();
 		}
 
 		virtual void setSurface(const surface_t *surf) {
-			m_surface = surf;
+			bGraph.init(surf);
+			bGraph.resize(dMgr.getLength(), dMgr.getMin(), dMgr.getMax());
 		}
 
 	protected:
@@ -47,7 +70,7 @@ class algorithm {
 		bool complete = false;
 		std::thread sortThread;
 		bool exit_thread = false;
-		const surface_t *m_surface;
+		barGraph bGraph;
 };
 
 class insertionSort : public algorithm {

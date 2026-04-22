@@ -3,14 +3,6 @@
 #include "SDL.h"
 #include <iostream>
 
-#define CUSHION		2	//pixels between bars
-#define BORDER_WIDTH	6
-#define BUMPER 		((BORDER_WIDTH/2) + CUSHION)
-#define ARRAY_SIZE 	120
-#define VAL_MAX 	ARRAY_SIZE
-
-#define EDGE_WIDTH	3
-
 void windowManager::updateScreen()
 {
     SDL_RenderPresent(m_mainRenderer);

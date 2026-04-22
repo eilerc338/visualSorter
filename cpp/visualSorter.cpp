@@ -12,6 +12,10 @@ bool visualSorter::mainLoop()
 		}
 	}
 
+	doStep();
+	waitStepDone();
+	//vs.debugPrintData();
+	drawGraphs();
 	updateScreen();
 	return true;
 }
@@ -90,9 +94,26 @@ void visualSorter::debugPrintData()
 	}
 }
 
+void visualSorter::drawGraphs()
+{
+	for (const auto &a : algorithms) {
+		a->drawGraph(winMgr.getRenderer());
+	}
+}
+
 void visualSorter::doStep()
 {
 	for (const auto &a : algorithms) {
 		a->doNextStep();
 	}
+}
+
+bool visualSorter::waitStepDone()
+{
+	for (const auto &a : algorithms) {
+		if (!a->isStepDone()) {
+			return false;
+		}
+	}
+	return true;
 }

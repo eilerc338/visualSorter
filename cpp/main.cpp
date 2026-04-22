@@ -6,6 +6,7 @@
 
 int main(int argc, char* argv[]) {
 	visualSorter vs;
+	bool exit = false;
 
 	std::cout << "Visual Sorter" << std::endl;
 
@@ -16,33 +17,36 @@ int main(int argc, char* argv[]) {
 	vs.initAlgorithms(initialData);
 
 	//init window
-#if 1
 	if (!vs.initWindow()) {
 		goto FAIL;
 	}
-#endif
-
-	vs.drawBorders();
-    //Update Screen
-	//vs.updateScreen();
 
 	vs.getSurfaces();
+	vs.drawBorders();
+	vs.drawGraphs();
+	vs.updateScreen();
 
-	//while (!vs.isAllComplete()) {
-	while (vs.mainLoop())
+	while (!exit)
 	{
-		// for now do one step per pressing enter
-		//std::cin.ignore();
-		//vs.drawBorders();
-		//vs.doStep();
+		SDL_Event e;
 
-		//vs.debugPrintData();
-		//showdata()
+		while(SDL_PollEvent(&e) != 0) {
+			//user requests to quit
+			if(e.type == SDL_QUIT) {
+				exit = true;
+			}
+		}
+
+		vs.doStep();
+		vs.waitStepDone();
+		vs.debugPrintData();
+		vs.drawGraphs();
+		vs.updateScreen();
 	}
 
-	std::cout << "1" << std::endl;
+
+	//std::cout << "Press any key" << std::endl;
 	//std::cin.ignore();
-	std::cout << "2" << std::endl;
 
 	//showStatistics();
 	//vs.isAllComplete();

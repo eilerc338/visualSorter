@@ -1,37 +1,8 @@
 #pragma once
 
+#include "graph.h"
 #include "SDL.h"
 #include <vector>
-
-//MAIN color
-#define MAIN_COLOR_R 0xFF
-#define MAIN_COLOR_G 0xFF
-#define MAIN_COLOR_B 0xFF
-#define MAIN_COLOR_A SDL_ALPHA_OPAQUE
-
-//green color
-#define GREEN_COLOR_R 0x00
-#define GREEN_COLOR_G 0xFF
-#define GREEN_COLOR_B 0x00
-#define GREEN_COLOR_A SDL_ALPHA_OPAQUE
-
-typedef SDL_Rect surface_t;
-
-class bar
-{
-	public:
-		bar() = delete;
-		bar(unsigned int xO, unsigned int yO, unsigned int xL, unsigned int yL)
-			: rect{static_cast<int>(xO), static_cast<int>(yO), static_cast<int>(xL), static_cast<int>(yL)} {}
-
-		int draw(SDL_Renderer *renderer)
-		{
-			SDL_SetRenderDrawColor(renderer, GREEN_COLOR_R, GREEN_COLOR_G, GREEN_COLOR_B, GREEN_COLOR_A);
-			return SDL_RenderFillRect(renderer, &rect);
-		}
-
-		SDL_Rect rect;
-};
 
 class windowManager
 {
@@ -48,6 +19,8 @@ class windowManager
 			}
 			return nullptr;
 		}
+
+		SDL_Renderer * getRenderer() {return m_mainRenderer;}
 
 		bool init(unsigned int numSurfaces);
 		void makeLayout(unsigned int numSurfaces);
