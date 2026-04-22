@@ -32,9 +32,27 @@ void windowManager::makeLayout(unsigned int numSurfaces)
 	}
 }
 
+void windowManager::debugPrintSurfaces()
+{
+	std::cout << std::endl;
+	std::cout << "print surfaces" << std::endl;
+	std::cout << "surfaces.size() = " << surfaces.size() << std::endl;
+
+	for(const auto &s : surfaces) {
+		std::cout << std::endl;
+		std::cout << "x = " << s.x << std::endl;
+		std::cout << "y = " << s.y << std::endl;
+		std::cout << "w = " << s.w << std::endl;
+		std::cout << "h = " << s.h << std::endl;
+	}
+	std::cout << "done printing surfaces "<< std::endl;
+	std::cout << std::endl;
+}
+
 void windowManager::debugPrintBorders()
 {
 	std::cout << std::endl;
+	std::cout << "print borders" << std::endl;
 	std::cout << "m_rows = " << m_rows << std::endl;
 	std::cout << "m_columns = " << m_columns << std::endl;
 	std::cout << "borders.size() = " << borders.size() << std::endl;
@@ -46,6 +64,8 @@ void windowManager::debugPrintBorders()
 		std::cout << "w = " << b.rect.w << std::endl;
 		std::cout << "h = " << b.rect.h << std::endl;
 	}
+	std::cout << "done printing borders "<< std::endl;
+	std::cout << std::endl;
 }
 
 void windowManager::createBorders()
@@ -56,7 +76,7 @@ void windowManager::createBorders()
 	// vertical borders
 	for (unsigned int i = 0; i < m_columns; ++i) {
 		if (i < m_columns) {
-			xOrigin += surfaces[i].x;
+			xOrigin = surfaces[i].x;
 
 			// xO, yO, xL, yL
 			if (i == 0) {
@@ -78,7 +98,7 @@ void windowManager::createBorders()
 	xOrigin = 0;
 	for (unsigned int i = 0; i < m_rows; ++i) {
 		if (i < m_rows) {
-			yOrigin += surfaces[i * m_columns].y;
+			yOrigin = surfaces[i * m_columns].y;
 
 			// xO, yO, xL, yL
 			if (i == 0) {
@@ -96,7 +116,11 @@ void windowManager::createBorders()
 		}
 	}
 
-	debugPrintBorders();
+	for (auto &b : borders) {
+		b.setColor(GREEN);
+	}
+
+	//debugPrintBorders();
 }
 
 void windowManager::createSurfaces()
@@ -113,6 +137,8 @@ void windowManager::createSurfaces()
 		}
 	}
 	m_nextSurface = surfaces.begin();
+
+	//debugPrintSurfaces();
 }
 
 bool windowManager::init(unsigned int numSurfaces)

@@ -29,6 +29,7 @@ class windowManager
 
 		//debug
 		void debugPrintBorders();
+		void debugPrintSurfaces();
 
 	private:
 		void createBorders();

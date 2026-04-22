@@ -4,14 +4,27 @@
 #include <iostream>
 #include <vector>
 
+#define DATA_SIZE	120
+
+std::vector<int> generateData_descending()
+{
+	std::vector<int> data(DATA_SIZE);
+
+	for (int i = 0; i < DATA_SIZE; ++i) {
+		data[i] = DATA_SIZE - i;
+	}
+
+	return data;
+}
+
 int main(int argc, char* argv[]) {
 	visualSorter vs;
-	bool exit = false;
+	bool close = false;
 
 	std::cout << "Visual Sorter" << std::endl;
 
-	//init generators
-	std::vector<int> initialData = {9,8,7,5};
+	std::vector<int> initialData = generateData_descending();
+	//std::vector<int> initialData = generateData_random();
 
 	//init algorithms
 	vs.initAlgorithms(initialData);
@@ -25,30 +38,31 @@ int main(int argc, char* argv[]) {
 	vs.drawBorders();
 	vs.drawGraphs();
 	vs.updateScreen();
-
-	while (!exit)
+#if 1
+	while (!close)
 	{
 		SDL_Event e;
 
 		while(SDL_PollEvent(&e) != 0) {
 			//user requests to quit
 			if(e.type == SDL_QUIT) {
-				exit = true;
+				close = true;
 			}
 		}
 
 		vs.doStep();
 		vs.waitStepDone();
-		vs.debugPrintData();
+		//vs.debugPrintData();
 		vs.drawGraphs();
 		vs.updateScreen();
 	}
+#endif
 
 
 	//std::cout << "Press any key" << std::endl;
 	//std::cin.ignore();
 
-	//showStatistics();
+	//vs.showStatistics();
 	//vs.isAllComplete();
 	//vs.debugPrintData();
 	return 0;

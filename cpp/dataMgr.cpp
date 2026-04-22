@@ -83,14 +83,12 @@ size_t dataMgr::getLength()
 
 void dataMgr::deInit()
 {
-	std::cout << "datamgr::deInit()" << std::endl;
 	exit_thread = true;
 	cond.notify_one();
 }
 
 dataMgr::~dataMgr()
 {
-	std::cout << "~datamgr()" << std::endl;
 	exit_thread = true;
 	cond.notify_one();
 }

@@ -39,13 +39,12 @@ bool barGraph::resize(int size, int minV, int maxV)
 	graph.resize(size);
 
 	// figure out m_graphSurface
-	int stride = m_fullSurface->w - (CUSHION * 2) / size;
+	int stride = (m_fullSurface->w - (CUSHION * 2)) / size;
 	int barWidth = stride - CUSHION;
 
 	// this makes sense because stride was rounded down
 	int graphWidth = stride * size;
 	int graphStart = (m_fullSurface->w - graphWidth) / 2;
-	m_resolution = (m_fullSurface->h - (CUSHION * 2)) / (maxV - minV);
 	m_minValue = std::min(minV - 1, 0);
 	m_maxValue = maxV;
 
@@ -55,10 +54,25 @@ bool barGraph::resize(int size, int minV, int maxV)
 	m_graphSurface.w = graphWidth;
 	m_graphSurface.h = m_fullSurface->h - (CUSHION * 2);
 
+	m_resolution = m_graphSurface.h / (m_maxValue - m_minValue);
+
+#if 0
+	std::cout << "minV = " << minV << std::endl;
+	std::cout << "maxV = " << maxV << std::endl;
+	std::cout << "size = " << size << std::endl;
+	std::cout << "stride = " << stride << std::endl;
+	std::cout << "graphStart = " << graphStart << std::endl;
+	std::cout << "graphWidth = " << graphWidth << std::endl;
+	std::cout << "m_resolution = " << m_resolution << std::endl;
+	std::cout << "m_fullSurface->x  = " << m_fullSurface->x  << std::endl;
+	std::cout << "m_fullSurface->y  = " << m_fullSurface->y  << std::endl;
+	std::cout << "m_fullSurface->w  = " << m_fullSurface->w  << std::endl;
+	std::cout << "m_fullSurface->h  = " << m_fullSurface->h  << std::endl;
 	std::cout << "m_graphSurface.x = " << m_graphSurface.x << std::endl;
 	std::cout << "m_graphSurface.y = " << m_graphSurface.y << std::endl;
 	std::cout << "m_graphSurface.w = " << m_graphSurface.w << std::endl;
 	std::cout << "m_graphSurface.h = " << m_graphSurface.h << std::endl;
+#endif
 
 	initBars(barWidth, stride);
 
